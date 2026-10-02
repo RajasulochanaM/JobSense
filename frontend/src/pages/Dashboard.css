@@ -1,0 +1,22 @@
+.quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.quick-action {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1rem;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--burgundy-dark); font-weight: 600; font-size: 0.92rem; text-decoration: none;
+}
+.quick-action:hover { border-color: var(--burgundy); color: var(--burgundy); }
+.quick-action svg { color: var(--burgundy); }
+
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.dash-job { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.dash-job-title { font-weight: 600; color: var(--text); text-decoration: none; }
+.dash-job-title:hover { color: var(--burgundy); text-decoration: underline; }
+.dash-score { background: var(--butter-light); border: 1px solid #efe0b4; color: var(--burgundy-dark); font-weight: 750; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
+.checklist { margin: 0.8rem 0; font-size: 0.88rem; }
+.checklist li { padding: 0.2rem 0; color: var(--text-2); }
+.checklist li.done { color: var(--success); }
+
+@media (max-width: 1000px) {
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
+  .quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
