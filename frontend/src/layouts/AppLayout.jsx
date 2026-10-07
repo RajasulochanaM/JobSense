@@ -45,7 +45,8 @@ export function Brand() {
   );
 }
 
-function UserMenu({ user, admin, onLogout }) {
+/** Avatar button with an account dropdown. `showDashboard` adds a dashboard link (used on public pages). */
+export function UserMenu({ user, admin, onLogout, showDashboard = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const location = useLocation();
@@ -74,6 +75,11 @@ function UserMenu({ user, admin, onLogout }) {
             <Avatar user={user} size={40} />
             <span className="who"><strong>{user?.name}</strong><span>{user?.email}</span></span>
           </div>
+          {showDashboard && (
+            <Link to={admin ? '/admin' : '/dashboard'} role="menuitem" className="user-menu-item">
+              <LayoutDashboard size={16} aria-hidden="true" /> Go to Dashboard
+            </Link>
+          )}
           {!admin && (
             <Link to="/profile" role="menuitem" className="user-menu-item"><User size={16} aria-hidden="true" /> My profile</Link>
           )}

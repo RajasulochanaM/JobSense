@@ -89,6 +89,9 @@
 .public-header .sidebar-brand { padding: 0; color: var(--burgundy-dark); }
 .public-header .brand-mark { background: var(--burgundy); color: var(--butter); }
 .public-nav { display: flex; align-items: center; gap: 0.5rem; }
+.public-header .user-menu-trigger { color: var(--text); border-color: var(--border); }
+.public-header .user-menu-trigger:hover { background: var(--burgundy-soft); }
+.public-header .avatar { border-color: var(--border); }
 
 .auth-page { min-height: calc(100vh - 140px); display: grid; place-items: center; padding: 2.5rem 1rem; }
 .auth-card { width: min(440px, 100%); }

@@ -22,6 +22,7 @@ import { validateRegister } from '../pages/Register';
 import { validateResumeFile } from '../pages/Resume';
 import Dashboard from '../pages/Dashboard';
 import Landing from '../pages/Landing';
+import PublicLayout from '../layouts/PublicLayout';
 
 function renderWithProviders(ui, { route = '/' } = {}) {
   return render(
@@ -49,6 +50,24 @@ describe('Footer', () => {
     expect(screen.getByRole('contentinfo')).toHaveTextContent(`© ${new Date().getFullYear()} JobSense`);
     expect(screen.getByRole('link', { name: 'Help' })).toHaveAttribute('href', '/help');
     expect(screen.getByRole('link', { name: 'Terms & Conditions' })).toHaveAttribute('href', '/terms');
+  });
+});
+
+describe('Public header', () => {
+  it('shows Log in for guests', () => {
+    renderWithProviders(<PublicLayout />);
+    expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+  });
+
+  it('replaces Log in with an account menu offering dashboard and logout', async () => {
+    localStorage.setItem('jobsense_token', 't');
+    authApi.me.mockResolvedValue({ user: { name: 'Asha Rao', email: 'asha@example.com', role: 'candidate' } });
+    renderWithProviders(<PublicLayout />);
+    const trigger = await screen.findByRole('button', { name: 'Account menu' });
+    expect(screen.queryByRole('link', { name: 'Log in' })).not.toBeInTheDocument();
+    await userEvent.click(trigger);
+    expect(screen.getByRole('menuitem', { name: /go to dashboard/i })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByRole('menuitem', { name: /log out/i })).toBeInTheDocument();
   });
 });
 

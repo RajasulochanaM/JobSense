@@ -23,7 +23,7 @@ class ProcessedResume:
     experience: list = field(default_factory=list)
     experience_years: float | None = None
 
-
+    
 class ResumeProcessor:
     def __init__(self, skill_extractor=None, preprocessor=None):
         self.skill_extractor = skill_extractor or get_skill_extractor()

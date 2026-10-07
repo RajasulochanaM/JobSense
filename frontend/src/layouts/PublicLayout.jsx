@@ -1,12 +1,19 @@
 import { Suspense } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Footer from '../components/Footer';
 import { Skeleton } from '../components/ui';
-import { Brand } from './AppLayout';
+import { Brand, UserMenu } from './AppLayout';
 
 export default function PublicLayout() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
+
   return (
     <>
       <a href="#main" className="skip-link">Skip to content</a>
@@ -15,7 +22,7 @@ export default function PublicLayout() {
           <Brand />
           <nav className="public-nav" aria-label="Account">
             {user ? (
-              <Link className="btn btn-primary btn-sm" to={isAdmin ? '/admin' : '/dashboard'}>Go to dashboard</Link>
+              <UserMenu user={user} admin={isAdmin} onLogout={handleLogout} showDashboard />
             ) : (
               <>
                 <Link className="btn btn-ghost btn-sm" to="/login">Log in</Link>
