@@ -1,0 +1,11 @@
+.job-hero { display: flex; justify-content: space-between; gap: 1.25rem; align-items: flex-start; }
+.job-hero h1 { font-size: 1.5rem; }
+.job-meta-lg { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; color: var(--text-2); }
+.job-meta-lg span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.job-detail-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 1rem; margin-top: 1rem; align-items: start; }
+.job-description { white-space: pre-line; font-size: 0.93rem; line-height: 1.65; max-height: 640px; overflow-y: auto; }
+@media (max-width: 960px) {
+  .job-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .job-detail-grid aside { order: -1; }
+  .job-hero { flex-direction: column-reverse; }
+}

@@ -1,0 +1,39 @@
+# Render Blueprint for the JobSense Flask API (no Docker required).
+# Frontend -> Vercel, database -> Railway MySQL. See docs/deployment.md.
+services:
+  - type: web
+    name: jobsense-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app --workers 2 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JOB_PROVIDER
+        value: jsearch
+      - key: JSEARCH_BASE_URL
+        value: https://api.openwebninja.com/jsearch
+      - key: JSEARCH_API_KEY
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: TEXT_SIMILARITY_WEIGHT
+        value: "0.40"
+      - key: SKILL_MATCH_WEIGHT
+        value: "0.60"
