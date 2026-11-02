@@ -24,3 +24,11 @@
 .text-preview { white-space: pre-wrap; background: var(--offwhite); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; max-height: 360px; overflow: auto; font-size: 0.82rem; margin-top: 0.6rem; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
 details summary { cursor: pointer; }
+
+.resume-row { border-radius: var(--radius-sm); padding-left: 0.4rem; padding-right: 0.4rem; }
+.resume-row.selected { background: var(--burgundy-soft); }
+.resume-select { all: unset; cursor: pointer; min-width: 0; flex: 1; border-radius: var(--radius-sm); }
+.resume-select:hover strong { color: var(--burgundy); text-decoration: underline; }
+.resume-select:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; }
+.resume-frame { width: 100%; height: 75vh; min-height: 420px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--offwhite); }
+.resume-text { max-height: 600px; }

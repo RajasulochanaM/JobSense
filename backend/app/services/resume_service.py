@@ -105,7 +105,7 @@ def resume_payload(row, include_text=False):
     data["is_active"] = bool(data.get("is_active"))
     if include_text:
         text = row.get("extracted_text") or ""
-        data["text_preview"] = text[:3000]
+        data["text_preview"] = text[:20000]
         data["text_length"] = len(text)
     return data
 
@@ -158,6 +158,23 @@ def get_resume(user_id, resume_id):
     data["skills"] = ([s["skill_name"] for s in resume_model.list_skills(user_id) if s["source"] == "resume"]
                       if data["is_active"] else None)
     return data
+
+
+MIME_TYPES = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+def get_resume_file(user_id, resume_id):
+    """Return (absolute_path, mimetype, display_name) of a user's stored resume file."""
+    row = resume_model.get_resume(user_id, resume_id)
+    if not row or not row.get("file_path"):
+        raise NotFound("Resume not found")
+    path = os.path.join(current_app.config["UPLOAD_FOLDER"], os.path.basename(row["file_path"]))
+    if not os.path.isfile(path):
+        raise NotFound("The resume file is no longer available")
+    return os.path.abspath(path), MIME_TYPES.get(row["file_type"], "application/octet-stream"), row["file_name"]
 
 
 def delete_resume(user_id, resume_id):

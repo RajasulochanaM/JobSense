@@ -90,6 +90,8 @@ export const resumeApi = {
     return unwrap(client.post('/resumes', form, { onUploadProgress, timeout: 120000 }));
   },
   remove: (id) => unwrap(client.delete(`/resumes/${id}`)),
+  /** Original uploaded file as a Blob (the API needs the auth header, so a plain <iframe src> can't load it). */
+  file: (id) => client.get(`/resumes/${id}/file`, { responseType: 'blob' }).then((res) => res.data),
 };
 
 export const jobsApi = {
