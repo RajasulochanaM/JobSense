@@ -19,7 +19,7 @@ import Footer from '../components/Footer';
 import JobCard from '../components/JobCard';
 import Login, { validateLogin } from '../pages/Login';
 import { validateRegister } from '../pages/Register';
-import { validateResumeFile } from '../pages/Resume';
+import { validateResumeFile } from '../utils/resume';
 import Dashboard from '../pages/Dashboard';
 import Landing from '../pages/Landing';
 import { describeEvent } from '../pages/Applications';

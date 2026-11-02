@@ -8,27 +8,15 @@ import { Alert, ConfirmDialog, EmptyState, ErrorState, PageHeader, Skeleton, Ski
 import Collapsible from '../components/Collapsible';
 import RecommendedJobs from '../components/RecommendedJobs';
 import { formatBytes, formatDate } from '../utils/format';
+import { MAX_RESUME_MB, resumeViewPath, validateResumeFile } from '../utils/resume';
 import './Resume.css';
 
-const MAX_MB = 5;
 const STAGES = [
   { key: 'uploaded', label: 'Resume uploaded' },
   { key: 'extracting_text', label: 'Extracting text' },
   { key: 'analyzing_skills', label: 'Analyzing skills' },
   { key: 'profile_updated', label: 'Profile updated' },
 ];
-
-/** URL of the full-tab resume viewer (opened in a new browser tab). */
-export const resumeViewPath = (id) => `/resume/${id}/view`;
-
-export function validateResumeFile(file) {
-  if (!file) return 'Please choose a file';
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (!['pdf', 'docx'].includes(ext)) return 'Only PDF and DOCX files are supported';
-  if (file.size > MAX_MB * 1024 * 1024) return `File is larger than ${MAX_MB} MB`;
-  if (file.size === 0) return 'The file is empty';
-  return null;
-}
 
 function ProcessingSteps({ stage, failed }) {
   const current = STAGES.findIndex((s) => s.key === stage);
@@ -145,7 +133,7 @@ export default function Resume() {
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 onChange={(e) => handleFile(e.target.files?.[0])} />
             </label>
-            <p className="small muted">PDF or DOCX, up to {MAX_MB} MB. Scanned image-only PDFs cannot be read.</p>
+            <p className="small muted">PDF or DOCX, up to {MAX_RESUME_MB} MB. Scanned image-only PDFs cannot be read.</p>
           </div>
 
           {stage && <ProcessingSteps stage={stage} failed={Boolean(uploadError)} />}
