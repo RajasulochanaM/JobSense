@@ -1,0 +1,16 @@
+.resume-view { min-height: 100vh; display: flex; flex-direction: column; background: var(--offwhite); }
+.resume-view.pdf { height: 100vh; }
+.resume-view-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.6rem 1rem; background: var(--white); border-bottom: 1px solid var(--border);
+}
+.resume-view-name { display: flex; align-items: baseline; gap: 0.75rem; min-width: 0; }
+.resume-view-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--burgundy); }
+.resume-view-name span { font-size: 0.85rem; color: var(--text-2); white-space: nowrap; }
+.resume-view-frame { flex: 1; width: 100%; border: 0; }
+.resume-view-doc {
+  width: min(860px, calc(100% - 32px)); margin: 1.5rem auto; padding: 2rem;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.resume-view-doc pre { white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 0.95rem; line-height: 1.6; margin: 0; }
+.resume-view-msg { max-width: 640px; margin: 3rem auto; padding: 0 16px; }

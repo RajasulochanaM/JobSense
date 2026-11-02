@@ -5,6 +5,7 @@ import { matchesApi } from '../services/api';
 import { useAsync } from '../hooks/useAsync';
 import { useSaveJob } from '../hooks/useSaveJob';
 import { useToast } from '../context/ToastContext';
+import Collapsible from './Collapsible';
 import JobCard from './JobCard';
 import { EmptyState, ErrorState, Pagination, Skeleton, Spinner } from './ui';
 
@@ -21,11 +22,13 @@ export default function RecommendedJobs({ resumeKey }) {
   const [sort, setSort] = useState('score');
   const [offset, setOffset] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [open, setOpen] = useState(true);
   const { data, loading, error, reload, setData } = useAsync(
     () => matchesApi.list({ sort, limit: LIMIT, offset }), [sort, offset, resumeKey]);
 
-  // Deep links such as /resume#recommended (and the old /matches route) land on this section.
+  // Deep links such as /resume#recommended (and the old /matches route) open and land on this section.
   useEffect(() => {
+    if (location.hash === '#recommended') setOpen(true);
     if (location.hash === '#recommended' && data) sectionRef.current?.scrollIntoView({ block: 'start' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.hash, Boolean(data)]);
@@ -52,16 +55,12 @@ export default function RecommendedJobs({ resumeKey }) {
   const profileReady = data?.profile_ready;
 
   return (
-    <section id="recommended" ref={sectionRef} className="card" style={{ marginTop: '1rem', scrollMarginTop: 80 }}
-      aria-labelledby="recommended-title">
-      <div className="row-between" style={{ marginBottom: '0.75rem' }}>
-        <div>
-          <h2 id="recommended-title" style={{ marginBottom: 2 }}>Recommended jobs</h2>
-          <p className="small muted" style={{ margin: 0 }}>
-            Jobs ranked by how closely they align with your resume. Scores are explainable, not guarantees.
-          </p>
-        </div>
-        {profileReady && (
+    <Collapsible id="recommended" sectionRef={sectionRef} open={open} onOpenChange={setOpen}
+      title="Recommended jobs"
+      description="Jobs ranked by how closely they align with your resume. Scores are explainable, not guarantees.">
+      {profileReady && (
+        <div className="row-between" style={{ marginBottom: '0.75rem' }}>
+          {data ? <p className="small muted" style={{ margin: 0 }}>{data.total} scored jobs</p> : <span />}
           <div className="row">
             <label className="sr-only" htmlFor="match-sort">Sort recommended jobs</label>
             <select id="match-sort" className="select" style={{ width: 'auto' }} value={sort}
@@ -73,8 +72,8 @@ export default function RecommendedJobs({ resumeKey }) {
               {refreshing ? <Spinner /> : <RefreshCw size={16} aria-hidden="true" />} Refresh recommendations
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading && !data ? <Skeleton count={3} lines={4} /> : error ? <ErrorState error={error} onRetry={reload} /> : !profileReady ? (
         <EmptyState icon={Sparkles} title="Upload your resume to get recommendations">
@@ -87,7 +86,6 @@ export default function RecommendedJobs({ resumeKey }) {
         </EmptyState>
       ) : (
         <>
-          <p className="small muted">{data.total} scored jobs</p>
           <div className="stack">
             {data.items.map((job) => <JobCard key={job.job_id} job={job} onToggleSave={toggle} saving={pending === job.job_id} showSnippet={false} />)}
           </div>
@@ -95,6 +93,6 @@ export default function RecommendedJobs({ resumeKey }) {
             onChange={(o) => { setOffset(o); sectionRef.current?.scrollIntoView({ block: 'start' }); }} />
         </>
       )}
-    </section>
+    </Collapsible>
   );
 }

@@ -1,0 +1,23 @@
+.collapse-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+  margin-top: 1rem; overflow: hidden; scroll-margin-top: 80px;
+}
+.collapse-heading { margin: 0; font-size: inherit; }
+.collapse-bar {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.95rem 1.25rem; background: var(--offwhite); color: var(--text);
+  transition: background 0.15s ease;
+}
+.collapse-card.open .collapse-bar { border-bottom: 1px solid var(--border); }
+.collapse-bar:hover { background: var(--burgundy-soft); }
+.collapse-bar:focus-visible { outline: 3px solid var(--butter); outline-offset: -3px; }
+.collapse-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.collapse-title { font-size: 1.1rem; font-weight: 700; color: var(--burgundy); }
+.collapse-desc { font-size: 0.85rem; font-weight: 400; color: var(--text-2); }
+.collapse-chevron { flex-shrink: 0; color: var(--burgundy); transition: transform 0.2s ease; }
+.collapse-card.open .collapse-chevron { transform: rotate(180deg); }
+.collapse-body { padding: 1.1rem 1.25rem 1.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  .collapse-chevron, .collapse-bar { transition: none; }
+}

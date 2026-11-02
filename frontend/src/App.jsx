@@ -1,7 +1,8 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import PublicLayout from './layouts/PublicLayout';
+import { Skeleton } from './components/ui';
 import { GuestOnly, RequireAdmin, RequireAuth } from './components/RouteGuards';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -10,6 +11,7 @@ import Register from './pages/Register';
 // Authenticated pages are code-split so the landing/login bundle stays small.
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Resume = lazy(() => import('./pages/Resume'));
+const ResumeView = lazy(() => import('./pages/ResumeView'));
 const Jobs = lazy(() => import('./pages/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs'));
@@ -42,6 +44,9 @@ export default function App() {
       </Route>
 
       <Route element={<RequireAuth />}>
+        {/* Full-tab resume viewer, opened in a new browser tab from the Resume page (no app chrome). */}
+        <Route path="/resume/:resumeId/view"
+          element={<Suspense fallback={<div style={{ padding: 32 }}><Skeleton /></div>}><ResumeView /></Suspense>} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resume" element={<Resume />} />

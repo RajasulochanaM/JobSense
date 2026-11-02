@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Download, Eye, FileText, Loader2, Trash2, Upload, AlertCircle } from 'lucide-react';
+import { CheckCircle2, ExternalLink, FileText, Loader2, Trash2, Upload, AlertCircle } from 'lucide-react';
 import { resumeApi } from '../services/api';
 import { useAsync, useDocumentTitle } from '../hooks/useAsync';
 import { useToast } from '../context/ToastContext';
 import { Alert, ConfirmDialog, EmptyState, ErrorState, PageHeader, Skeleton, SkillChips } from '../components/ui';
+import Collapsible from '../components/Collapsible';
 import RecommendedJobs from '../components/RecommendedJobs';
 import { formatBytes, formatDate } from '../utils/format';
 import './Resume.css';
@@ -16,6 +17,9 @@ const STAGES = [
   { key: 'analyzing_skills', label: 'Analyzing skills' },
   { key: 'profile_updated', label: 'Profile updated' },
 ];
+
+/** URL of the full-tab resume viewer (opened in a new browser tab). */
+export const resumeViewPath = (id) => `/resume/${id}/view`;
 
 export function validateResumeFile(file) {
   if (!file) return 'Please choose a file';
@@ -47,57 +51,13 @@ function ProcessingSteps({ stage, failed }) {
   );
 }
 
-/** Shows the uploaded file on the page: PDFs are embedded, DOCX (not renderable by browsers) shows its extracted text. */
-function ResumePreview({ resume, text }) {
-  const [url, setUrl] = useState(null);
-  const [error, setError] = useState('');
-  const isPdf = resume.file_type === 'pdf';
-
-  useEffect(() => {
-    let objectUrl = null;
-    let cancelled = false;
-    setUrl(null);
-    setError('');
-    resumeApi.file(resume.resume_id)
-      .then((blob) => {
-        if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      })
-      .catch((err) => { if (!cancelled) setError(err.message || 'Could not load the resume file'); });
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [resume.resume_id]);
-
+/** Link that opens a resume in a new browser tab. */
+function ResumeLink({ resume, children, className = 'resume-link' }) {
   return (
-    <div className="stack">
-      <div className="row-between">
-        <div className="row small muted" style={{ minWidth: 0 }}>
-          <FileText size={16} aria-hidden="true" />
-          <strong className="text truncate">{resume.file_name}</strong>
-          <span>{resume.file_type.toUpperCase()} · {formatBytes(resume.file_size)}</span>
-        </div>
-        {url && (
-          <a className="btn btn-sm btn-secondary" href={url} download={resume.file_name}>
-            <Download size={14} aria-hidden="true" /> Download
-          </a>
-        )}
-      </div>
-      {error ? <Alert type="error" icon={AlertCircle}>{error}</Alert>
-        : isPdf ? (
-          url ? <iframe className="resume-frame" src={url} title={`Preview of ${resume.file_name}`} />
-            : <Skeleton lines={6} />
-        ) : text ? (
-          <>
-            <p className="small muted">Word documents can't be displayed in the browser, so the text extracted from it is shown below. Use Download to open the original.</p>
-            <pre className="text-preview resume-text">{text}</pre>
-          </>
-        ) : (
-          <p className="small muted">This DOCX can't be previewed in the browser. Use Download to open it.</p>
-        )}
-    </div>
+    <Link to={resumeViewPath(resume.resume_id)} target="_blank" rel="noopener noreferrer" className={className}
+      title="Open resume in a new tab">
+      {children}
+    </Link>
   );
 }
 
@@ -111,16 +71,10 @@ export default function Resume() {
   const [result, setResult] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
 
   const list = useAsync(() => resumeApi.list(), []);
   const active = list.data?.items.find((r) => r.is_active && r.status === 'processed');
-  // The resume shown in the preview/analysis: the one clicked in the list, otherwise the active one.
-  const selected = list.data?.items.find((r) => r.resume_id === selectedId) || active;
-  const selectedDetail = useAsync(
-    () => (selected && selected.status === 'processed' ? resumeApi.get(selected.resume_id) : Promise.resolve(null)),
-    [selected?.resume_id],
-  );
+  const activeDetail = useAsync(() => (active ? resumeApi.get(active.resume_id) : Promise.resolve(null)), [active?.resume_id]);
   const busy = stage && stage !== 'profile_updated' && !uploadError;
 
   const handleFile = async (file) => {
@@ -136,7 +90,6 @@ export default function Resume() {
       });
       setStage('profile_updated');
       setResult(data);
-      setSelectedId(data.resume.resume_id);
       toast.success(`Resume analysed - ${data.skills.length} skills found`);
       list.reload({ silent: true });
     } catch (err) {
@@ -157,7 +110,6 @@ export default function Resume() {
     try {
       await resumeApi.remove(confirm.resume_id);
       toast.success('Resume deleted');
-      if (confirm.resume_id === selected?.resume_id) setSelectedId(null);
       setConfirm(null);
       setResult(null);
       setStage(null);
@@ -169,9 +121,9 @@ export default function Resume() {
     }
   };
 
-  const fresh = result && result.resume.resume_id === selected?.resume_id ? result : null;
-  const detail = fresh?.resume || selectedDetail.data;
-  const skills = fresh ? fresh.skills : selectedDetail.data?.skills;
+  const detail = result?.resume || activeDetail.data;
+  const skills = result?.skills ?? activeDetail.data?.skills;
+  const current = active || (result ? result.resume : null);
 
   return (
     <div>
@@ -212,16 +164,21 @@ export default function Resume() {
             list.data.items.length === 0 ? <p className="muted small">No resumes uploaded yet.</p> : (
               <ul className="list-plain list-divided">
                 {list.data.items.map((r) => (
-                  <li key={r.resume_id} className={`row-between resume-row ${r.resume_id === selected?.resume_id ? 'selected' : ''}`}>
-                    <button type="button" className="resume-select" onClick={() => setSelectedId(r.resume_id)}
-                      aria-pressed={r.resume_id === selected?.resume_id} aria-label={`View ${r.file_name}`}>
-                      <div className="row"><Eye size={16} aria-hidden="true" /><strong className="truncate">{r.file_name}</strong>
+                  <li key={r.resume_id} className="row-between">
+                    <div style={{ minWidth: 0 }}>
+                      <div className="row">
+                        <FileText size={16} aria-hidden="true" />
+                        <ResumeLink resume={r}>
+                          <strong className="truncate">{r.file_name}</strong>
+                          <ExternalLink size={13} aria-hidden="true" />
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </ResumeLink>
                         {r.is_active && <span className="badge badge-success">Active</span>}
                         {r.status === 'failed' && <span className="badge badge-error">Failed</span>}
                       </div>
                       <div className="small muted">{formatDate(r.uploaded_at)} · {r.file_type.toUpperCase()} · {formatBytes(r.file_size)}</div>
                       {r.error_message && <div className="small field-error">{r.error_message}</div>}
-                    </button>
+                    </div>
                     <button type="button" className="btn btn-sm btn-danger" onClick={() => setConfirm(r)} aria-label={`Delete ${r.file_name}`}>
                       <Trash2 size={14} aria-hidden="true" />
                     </button>
@@ -233,19 +190,9 @@ export default function Resume() {
         </section>
       </div>
 
-      {selected && (
-        <section className="card" style={{ marginTop: '1rem' }} aria-labelledby="preview-title">
-          <h2 id="preview-title">Resume preview</h2>
-          <ResumePreview resume={selected} text={detail?.text_preview} />
-        </section>
-      )}
-
-      <section className="card" style={{ marginTop: '1rem' }} aria-labelledby="analysis-title">
-        <h2 id="analysis-title">Resume analysis</h2>
+      <Collapsible id="analysis" title="Resume analysis" description="Skills, education and experience detected in your active resume.">
         {!detail ? (
-          selectedDetail.loading ? <Skeleton lines={3} /> : selected?.status === 'failed' ? (
-            <EmptyState icon={AlertCircle} title="This resume could not be analysed">{selected.error_message || 'Try uploading a text-based PDF or DOCX.'}</EmptyState>
-          ) : (
+          activeDetail.loading ? <Skeleton lines={3} /> : (
             <EmptyState icon={FileText} title="No resume analysed yet">Upload your resume to see the extracted skills and text.</EmptyState>
           )
         ) : (
@@ -253,7 +200,7 @@ export default function Resume() {
             <div className="row small muted">
               <span><strong className="text">{detail.file_name}</strong></span>
               <span>Uploaded {formatDate(detail.uploaded_at)}</span>
-              {detail.is_active ? <span className="badge badge-success">Active</span> : <span className="badge">Previous upload</span>}
+              <span className="badge badge-success">Processed</span>
               {detail.experience_years !== null && detail.experience_years !== undefined && <span>≈ {detail.experience_years} years experience detected</span>}
             </div>
             <div>
@@ -275,7 +222,24 @@ export default function Resume() {
             )}
           </div>
         )}
-      </section>
+      </Collapsible>
+
+      <Collapsible id="preview" title="Resume preview" description="Open your resume in a new browser tab.">
+        {current ? (
+          <div className="row-between">
+            <div className="row small muted" style={{ minWidth: 0 }}>
+              <FileText size={18} aria-hidden="true" />
+              <strong className="text truncate">{current.file_name}</strong>
+              <span>{current.file_type.toUpperCase()} · {formatBytes(current.file_size)}</span>
+            </div>
+            <ResumeLink resume={current} className="btn btn-primary">
+              <ExternalLink size={16} aria-hidden="true" /> Open resume in new tab
+            </ResumeLink>
+          </div>
+        ) : list.loading && !list.data ? <Skeleton lines={1} /> : (
+          <EmptyState icon={FileText} title="No resume to preview">Upload your resume to view it here.</EmptyState>
+        )}
+      </Collapsible>
 
       <RecommendedJobs resumeKey={active?.resume_id ?? 'none'} />
 

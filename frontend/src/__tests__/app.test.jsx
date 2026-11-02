@@ -24,6 +24,7 @@ import Dashboard from '../pages/Dashboard';
 import Landing from '../pages/Landing';
 import { describeEvent } from '../pages/Applications';
 import PublicLayout from '../layouts/PublicLayout';
+import Collapsible from '../components/Collapsible';
 
 function renderWithProviders(ui, { route = '/' } = {}) {
   return render(
@@ -148,5 +149,17 @@ describe('Dashboard', () => {
     expect(screen.getByText('cv.pdf')).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('link', { name: 'React Developer' })).toBeInTheDocument());
+  });
+});
+
+describe('Collapsible', () => {
+  it('opens and closes its body from the header bar', async () => {
+    render(<Collapsible id="t" title="Resume analysis"><p>Body text</p></Collapsible>);
+    const bar = screen.getByRole('button', { name: /Resume analysis/ });
+    expect(bar).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Body text')).toBeVisible();
+    await userEvent.click(bar);
+    expect(bar).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Body text')).not.toBeVisible();
   });
 });
