@@ -123,7 +123,6 @@ export default function Resume() {
 
   const detail = result?.resume || activeDetail.data;
   const skills = result?.skills ?? activeDetail.data?.skills;
-  const current = active || (result ? result.resume : null);
 
   return (
     <div>
@@ -221,23 +220,6 @@ export default function Resume() {
               </details>
             )}
           </div>
-        )}
-      </Collapsible>
-
-      <Collapsible id="preview" title="Resume preview" description="Open your resume in a new browser tab.">
-        {current ? (
-          <div className="row-between">
-            <div className="row small muted" style={{ minWidth: 0 }}>
-              <FileText size={18} aria-hidden="true" />
-              <strong className="text truncate">{current.file_name}</strong>
-              <span>{current.file_type.toUpperCase()} · {formatBytes(current.file_size)}</span>
-            </div>
-            <ResumeLink resume={current} className="btn btn-primary">
-              <ExternalLink size={16} aria-hidden="true" /> Open resume in new tab
-            </ResumeLink>
-          </div>
-        ) : list.loading && !list.data ? <Skeleton lines={1} /> : (
-          <EmptyState icon={FileText} title="No resume to preview">Upload your resume to view it here.</EmptyState>
         )}
       </Collapsible>
 
