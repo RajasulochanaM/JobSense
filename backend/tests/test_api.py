@@ -104,6 +104,26 @@ def test_users_cannot_access_other_users_resumes(client, auth_headers):
     assert client.get(f"/api/resumes/{resume_id}", headers=auth_headers).status_code == 200
 
 
+def test_view_uploaded_resume_file(client, auth_headers):
+    pdf = make_pdf(SAMPLE_RESUME)
+    resume_id = upload(client, auth_headers, pdf, "cv.pdf", "application/pdf").get_json()["data"]["resume"]["resume_id"]
+    r = client.get(f"/api/resumes/{resume_id}/file", headers=auth_headers)
+    assert r.status_code == 200 and r.mimetype == "application/pdf" and r.data == pdf
+    assert "attachment" not in r.headers.get("Content-Disposition", "")  # PDFs open inline
+
+    docx = make_docx(SAMPLE_RESUME)
+    docx_id = upload(client, auth_headers, docx, "cv.docx",
+                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                     ).get_json()["data"]["resume"]["resume_id"]
+    r = client.get(f"/api/resumes/{docx_id}/file", headers=auth_headers)
+    assert r.status_code == 200 and r.data == docx and "attachment" in r.headers["Content-Disposition"]
+
+    assert client.get(f"/api/resumes/{resume_id}/file").status_code == 401
+    token, _ = register(client)
+    assert client.get(f"/api/resumes/{resume_id}/file",
+                      headers={"Authorization": f"Bearer {token}"}).status_code == 404
+
+
 # ------------------------------------------------------ jobs / matching flow
 
 def test_search_match_save_apply_flow(client, auth_headers):

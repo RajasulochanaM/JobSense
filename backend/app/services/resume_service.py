@@ -160,6 +160,23 @@ def get_resume(user_id, resume_id):
     return data
 
 
+MIME_TYPES = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+def get_resume_file(user_id, resume_id):
+    """Return (absolute_path, mimetype, display_name) of a user's stored resume file."""
+    row = resume_model.get_resume(user_id, resume_id)
+    if not row or not row.get("file_path"):
+        raise NotFound("Resume not found")
+    path = os.path.join(current_app.config["UPLOAD_FOLDER"], os.path.basename(row["file_path"]))
+    if not os.path.isfile(path):
+        raise NotFound("The resume file is no longer available")
+    return os.path.abspath(path), MIME_TYPES.get(row["file_type"], "application/octet-stream"), row["file_name"]
+
+
 def delete_resume(user_id, resume_id):
     row = resume_model.get_resume(user_id, resume_id)
     if not row:

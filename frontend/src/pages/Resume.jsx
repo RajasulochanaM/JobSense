@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, FileText, Loader2, Trash2, Upload, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Download, Eye, FileText, Loader2, Trash2, Upload, AlertCircle } from 'lucide-react';
 import { resumeApi } from '../services/api';
 import { useAsync, useDocumentTitle } from '../hooks/useAsync';
 import { useToast } from '../context/ToastContext';
@@ -57,6 +57,7 @@ export default function Resume() {
   const [result, setResult] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [viewingId, setViewingId] = useState(null);
 
   const list = useAsync(() => resumeApi.list(), []);
   const active = list.data?.items.find((r) => r.is_active && r.status === 'processed');
@@ -89,6 +90,33 @@ export default function Resume() {
     e.preventDefault();
     setDragOver(false);
     if (!busy) handleFile(e.dataTransfer.files?.[0]);
+  };
+
+  const viewResume = async (r) => {
+    const isPdf = r.file_type === 'pdf';
+    // Open the tab synchronously (inside the click) so pop-up blockers allow it; fill it once the file arrives.
+    const win = isPdf ? window.open('', '_blank') : null;
+    setViewingId(r.resume_id);
+    try {
+      const blob = await resumeApi.file(r.resume_id);
+      const url = URL.createObjectURL(blob);
+      if (isPdf && win) {
+        win.location.href = url;
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = r.file_name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      if (win) win.close();
+      toast.error(err.message || 'Could not open the resume');
+    } finally {
+      setViewingId(null);
+    }
   };
 
   const doDelete = async () => {
@@ -158,9 +186,20 @@ export default function Resume() {
                       <div className="small muted">{formatDate(r.uploaded_at)} · {r.file_type.toUpperCase()} · {formatBytes(r.file_size)}</div>
                       {r.error_message && <div className="small field-error">{r.error_message}</div>}
                     </div>
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => setConfirm(r)} aria-label={`Delete ${r.file_name}`}>
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
+                    <div className="row" style={{ flexShrink: 0 }}>
+                      {r.status !== 'failed' && (
+                        <button type="button" className="btn btn-sm btn-secondary" onClick={() => viewResume(r)}
+                          disabled={viewingId === r.resume_id}
+                          aria-label={`${r.file_type === 'pdf' ? 'View' : 'Download'} ${r.file_name}`}
+                          title={r.file_type === 'pdf' ? 'View resume' : 'Download resume (DOCX cannot be previewed in the browser)'}>
+                          {viewingId === r.resume_id ? <Loader2 size={14} className="spin" aria-hidden="true" />
+                            : r.file_type === 'pdf' ? <Eye size={14} aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}
+                        </button>
+                      )}
+                      <button type="button" className="btn btn-sm btn-danger" onClick={() => setConfirm(r)} aria-label={`Delete ${r.file_name}`}>
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
