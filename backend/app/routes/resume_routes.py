@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request, send_file
+from flask import Blueprint, g, request
 
 from ..auth.decorators import login_required
 from ..services import resume_service
@@ -24,15 +24,6 @@ def list_resumes():
 @login_required
 def get_resume(resume_id):
     return success(resume_service.get_resume(g.user["user_id"], resume_id))
-
-
-@bp.get("/<int:resume_id>/file")
-@login_required
-def resume_file(resume_id):
-    path, mimetype, name = resume_service.get_resume_file(g.user["user_id"], resume_id)
-    # PDFs open inline in the browser; DOCX cannot be rendered, so the browser downloads it.
-    return send_file(path, mimetype=mimetype, as_attachment=mimetype != "application/pdf",
-                     download_name=name, max_age=0)
 
 
 @bp.delete("/<int:resume_id>")
